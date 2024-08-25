@@ -7,6 +7,13 @@ if [ -f  env.sh ]; then
     . env.sh
 fi
 
+if [[ $(uname) == "Linux" ]]; then
+  SED_CMD="sed -i  "
+elif [[ $(uname) == "Darwin" ]]; then
+  SED_CMD="sed -i  ''"
+fi
+
+
 if [ "$1" = "" ]; then
     echo "$usage"
     exit
@@ -94,25 +101,25 @@ else
 fi
 
 if [[ "$EVALUATION_INTERVAL" != "" ]]; then
-    sed -i "s/  evaluation_interval: [[:digit:]]*.*/  evaluation_interval: ${EVALUATION_INTERVAL}/g" $BASE_DIR/prometheus.yml
+    $SED_CMD "s/  evaluation_interval: [[:digit:]]*.*/  evaluation_interval: ${EVALUATION_INTERVAL}/g" $BASE_DIR/prometheus.yml
 fi
 if [[ "$SCRAP_INTERVAL" != "" ]]; then
-    sed -i "s/  scrape_interval: [[:digit:]]*.*# *Default.*/  scrape_interval: ${SCRAP_INTERVAL}s/g" $BASE_DIR/prometheus.yml
+    $SED_CMD "s/  scrape_interval: [[:digit:]]*.*# *Default.*/  scrape_interval: ${SCRAP_INTERVAL}s/g" $BASE_DIR/prometheus.yml
     TIMEOUT=$(($SCRAP_INTERVAL - 5))
-    sed -i "s/  scrape_timeout: [[:digit:]]*.*# *Default.*/  scrape_timeout: ${TIMEOUT}s/g" $BASE_DIR/prometheus.yml
+    $SED_CMD "s/  scrape_timeout: [[:digit:]]*.*# *Default.*/  scrape_timeout: ${TIMEOUT}s/g" $BASE_DIR/prometheus.yml
 fi
 if [ "$NO_CAS" = "1" ] && [ "$NO_CDC" = "1" ]; then
-    sed -i "s/ *# FILTER_METRICS.*/    - source_labels: [__name__]\\n      regex: '(.*_cdc_.*|.*_cas.*)'\\n      action: drop/g" $BASE_DIR/prometheus.yml
+    $SED_CMD "s/ *# FILTER_METRICS.*/    - source_labels: [__name__]\\n      regex: '(.*_cdc_.*|.*_cas.*)'\\n      action: drop/g" $BASE_DIR/prometheus.yml
 elif [ "$NO_CAS" = "1" ]; then
-    sed -i "s/ *# FILTER_METRICS.*/    - source_labels: [__name__]\\n      regex: '(.*_cas.*)'\\n      action: drop/g" $BASE_DIR/prometheus.yml
+    $SED_CMD "s/ *# FILTER_METRICS.*/    - source_labels: [__name__]\\n      regex: '(.*_cas.*)'\\n      action: drop/g" $BASE_DIR/prometheus.yml
 elif [ "$NO_CDC" = "1" ]; then
-    sed -i "s/ *# FILTER_METRICS.*/    - source_labels: [__name__]\\n      regex: '(.*_cdc_.*)'\\n      action: drop/g" $BASE_DIR/prometheus.yml
+    $SED_CMD "s/ *# FILTER_METRICS.*/    - source_labels: [__name__]\\n      regex: '(.*_cdc_.*)'\\n      action: drop/g" $BASE_DIR/prometheus.yml
 fi
 if [ "$NO_NODE_EXPORTER_FILE" = "1" ]; then
-    sed -i "s/ *# NODE_EXPORTER_PORT_MAPPING.*/    - source_labels: [__address__]\\n      regex:  '(.*):\\\\d+'\\n      target_label: __address__\\n      replacement: '\$\{1\}'\\n/g" $BASE_DIR/prometheus.yml
+    $SED_CMD "s/ *# NODE_EXPORTER_PORT_MAPPING.*/    - source_labels: [__address__]\\n      regex:  '(.*):\\\\d+'\\n      target_label: __address__\\n      replacement: '\$\{1\}'\\n/g" $BASE_DIR/prometheus.yml
 fi
 if [ "$NO_MANAGER_AGENT_FILE" = "1" ]; then
-    sed -i "s/ *# MANAGER_AGENT_PORT_MAPPING.*/    - source_labels: [__address__]\\n      regex:  '(.*):\\\\d+'\\n      target_label: __address__\\n      replacement: \'\$\{1\}\'\\n/g" $BASE_DIR/prometheus.yml
+    $SED_CMD "s/ *# MANAGER_AGENT_PORT_MAPPING.*/    - source_labels: [__address__]\\n      regex:  '(.*):\\\\d+'\\n      target_label: __address__\\n      replacement: \'\$\{1\}\'\\n/g" $BASE_DIR/prometheus.yml
 fi
 
 for val in "${PROMETHEUS_TARGETS[@]}"; do

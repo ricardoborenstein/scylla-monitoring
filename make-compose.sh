@@ -55,8 +55,10 @@ fi
 
 if [[ $(uname) == "Linux" ]]; then
   readlink_command="readlink -f"
+  SED_CMD="sed -i  "
 elif [[ $(uname) == "Darwin" ]]; then
   readlink_command="realpath "
+  SED_CMD="sed -i ''"
 fi
 
 function usage {
@@ -85,7 +87,7 @@ Options:
   -D docker param                - Encapsulate docker param, the parameter will be used by all containers.
   -r alert-manager-config        - Override the default alert-manager configuration file.
   -f path/to/alertmanager/data   - If set, the alertmanager would store its data in the given directory.
-  -R prometheus-alert-file       - Override the default Prometheus alerts configuration file.
+  -R prometheus-alert-file       - Override the default Prometheusx alerts configuration file.
   -N path/to/manager/target file - Set the location of the target file for Scylla Manager.
   -A bind-to-ip-address          - Bind to a specific interface.
   -C alertmanager commands       - Pass the command to the alertmanager.
@@ -593,8 +595,8 @@ echo "LOKI_DIR=$LOKI_DIR">> .env
 echo "LOKI_PORT=$LOKI_PORT">> .env
 echo "LOKI_WALL_DIR=$LOKI_WALL_DIR">> .env
 if [ "$VICTORIA_METRICS" = "1" ]; then
-	sed -i 's&prom/prometheus:${PROMETHEUS_VERSION}&victoriametrics/victoria-metrics:${VICTORIA_METRICS_VERSION}&' docker-compose.yml
-	sed -i 's&./prometheus/build/prometheus.yml:/etc/prometheus/prometheus.yml&./prometheus/build/prometheus.yml:/etc/promscrape.config.yml:z&' docker-compose.yml
+	$SED_CMD 's&prom/prometheus:${PROMETHEUS_VERSION}&victoriametrics/victoria-metrics:${VICTORIA_METRICS_VERSION}&' docker-compose.yml
+	$SED_CMD 's&./prometheus/build/prometheus.yml:/etc/prometheus/prometheus.yml&./prometheus/build/prometheus.yml:/etc/promscrape.config.yml:z&' docker-compose.yml
 	PROMETHEUS_COMMAND_LINE_OPTIONS_ARRAY+=( -promscrape.config=/etc/promscrape.config.yml -promscrape.config.strictParse=false -httpListenAddr=:9090)
 else
 	PROMETHEUS_COMMAND_LINE_OPTIONS_ARRAY+=(--config.file=/etc/prometheus/prometheus.yml --web.enable-lifecycle)
@@ -604,19 +606,19 @@ if (( ${#PROMETHEUS_COMMAND_LINE_OPTIONS_ARRAY[@]} )); then
     PROMETHEUS_COMMAND_LINE="    command:\n"`add_param "${PROMETHEUS_COMMAND_LINE_OPTIONS_ARRAY[@]}"`
 fi
 
-sed -i "s& *#PROMETHEUS_COMMAND_LINE&$PROMETHEUS_COMMAND_LINE&" docker-compose.yml
+$SED_CMD "s& *#PROMETHEUS_COMMAND_LINE&$PROMETHEUS_COMMAND_LINE&" docker-compose.yml
 val=`add_param "${PROMETHEUS_PROMETHEUS_VOLUMES_ARRAY[@]}"`
-sed -i "s& *#PROMETHEUS_VOLUMES&$val&" docker-compose.yml
+$SED_CMD "s& *#PROMETHEUS_VOLUMES&$val&" docker-compose.yml
 
 val=`add_param "${GRAFANA_ENV_ARRAY[@]}"`
-sed -i "s& *#GRAFANA_ENV&$val&" docker-compose.yml
+$SED_CMD "s& *#GRAFANA_ENV&$val&" docker-compose.yml
 
-sed -i "s& *#GENERAL_DOCER_CONFIG&$DOCKER_PARAM&" docker-compose.yml
-sed -i "s& *#ALERT_MANAGER_DIR&$ALERT_MANAGER_DIR&" docker-compose.yml
-sed -i "s& *#ALERTMANAGER_COMMAND&$ALERTMANAGER_COMMAND&" docker-compose.yml
-sed -i "s&#PROMETHEUS_USER_PERMISSIONS&$PROMETHEUS_USER_PERMISSIONS&" docker-compose.yml
-sed -i "s&#LOKI_DIR&$LOKI_DIR&" docker-compose.yml
-sed -i "s&#LOKi_USER_PERMISSIONS&$LOKi_USER_PERMISSIONS&" docker-compose.yml
+$SED_CMD "s& *#GENERAL_DOCER_CONFIG&$DOCKER_PARAM&" docker-compose.yml
+$SED_CMD "s& *#ALERT_MANAGER_DIR&$ALERT_MANAGER_DIR&" docker-compose.yml
+$SED_CMD "s& *#ALERTMANAGER_COMMAND&$ALERTMANAGER_COMMAND&" docker-compose.yml
+$SED_CMD "s&#PROMETHEUS_USER_PERMISSIONS&$PROMETHEUS_USER_PERMISSIONS&" docker-compose.yml
+$SED_CMD "s&#LOKI_DIR&$LOKI_DIR&" docker-compose.yml
+$SED_CMD "s&#LOKi_USER_PERMISSIONS&$LOKi_USER_PERMISSIONS&" docker-compose.yml
 
 ./prometheus-config.sh -m $ALERTMANAGER_ADDRESS $CONSUL_ADDRESS $PROMETHEUS_TARGETS
 for val in "${GRAFANA_DASHBOARD_ARRAY[@]}"; do

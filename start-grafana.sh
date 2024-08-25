@@ -287,12 +287,20 @@ if [[ -z "${DOCKER_HOST}" ]]; then
 fi
 
 if [ ! -z $RUN_RENDERER ]; then
-	if [ ! -z "$is_podman" ]; then
-		HOST_ADDRESS=`hostname -I | awk '{print $1}'`
-	else
-		HOST_ADDRESS=$(ip -4 addr show docker0 | grep -Po 'inet \K[\d.]+')
-	fi
-    RENDERING_SERVER_URL=`./start-grafana-renderer.sh $LIMITS $VOLUMES $PARAMS  -D "$DOCKER_PARAM"`
+    if [ ! -z "$is_podman" ]; then
+        if [[ $(uname) == "Linux" ]]; then
+            HOST_ADDRESS=$(hostname -I | awk '{print $1}')
+        elif [[ $(uname) == "Darwin" ]]; then
+            HOST_ADDRESS=$(ifconfig bridge0 | awk '/inet / {print $2}')
+        fi
+    else
+        if [[ $(uname) == "Linux" ]]; then
+            HOST_ADDRESS=$(ip -4 addr show docker0 | grep -Po 'inet \K[\d.]+')
+        elif [[ $(uname) == "Darwin" ]]; then
+            HOST_ADDRESS=$(ifconfig bridge0 | awk '/inet / {print $2}')
+        fi
+    fi
+    RENDERING_SERVER_URL=`./start-grafana-renderer.sh $LIMITS $VOLUMES $PARAMS -D "$DOCKER_PARAM"`
     GRAFANA_ENV_COMMAND="$GRAFANA_ENV_COMMAND -e GF_RENDERING_SERVER_URL=http://$HOST_ADDRESS:8081/render -e GF_RENDERING_CALLBACK_URL=http://$HOST_ADDRESS:$GRAFANA_PORT/"
 fi
 

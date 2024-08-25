@@ -68,7 +68,7 @@ Options:
   -v comma separated versions    - Specify one or more Scylla versions, check --version for the supported versions.
   -j additional dashboard        - List additional dashboards to load to Grafana, multiple params are supported.
   -c grafana_environment         - Grafana environment variable, multiple params are supported.
-  -b Prometheus command          - Prometheus command line options.
+  -b Prometheus command          - Prometheus command fline options.
   -g grafana port                - Override the default Grafana port.
   -p prometheus port             - Override the default Prometheus port.
   -a admin password              - Set Grafna's Admin password.
